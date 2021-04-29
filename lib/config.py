@@ -1,4 +1,5 @@
 # from lib.reporter import Reporter
+import os
 import shutil
 from lib.helpers import backup_commands, make_tarfile, prom_report, sanitize_job_name, time_s
 from prometheus_client import CollectorRegistry, Gauge
@@ -73,11 +74,13 @@ class Config(IJob):
 
     @property
     def backup_path(self) -> Path:
-        return Path.cwd().joinpath(self.app, f'backup-{self.start}')
+        root = Path(os.environ.get('BACKUP_DIR', Path.cwd()))
+        return root.joinpath(self.app, f'backup-{self.start}')
 
     @property
     def backup_tar_path(self) -> Path:
-        return Path.cwd().joinpath(self.app, f'backup-{self.start}.tar.gz')
+        root = Path(os.environ.get('BACKUP_DIR', Path.cwd()))
+        return root.joinpath(self.app, f'backup-{self.start}.tar.gz')
 
     @property
     def get_tar_size_mb(self) -> int:
