@@ -1,0 +1,9 @@
+js-web-app:
+  files:
+    - "/home/dokku/js-web-app/ENV"
+  folders:
+    - "/var/lib/dokku/data/storage/js-web-app/data"
+  commands:
+    postgres:
+      cmd: "dokku postgres:export js-web-app"
+      to: "/database/js-web-app.dump"
