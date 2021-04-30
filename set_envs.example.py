@@ -5,5 +5,5 @@ def set_envs():
     os.environ['PUSH_GATEWAY'] = 'https://push-gateway.foo.ch'
     os.environ['AUTH_USER'] = 'admin'
     os.environ['AUTH_PASSWORD'] = 'asdfasdf'
-    os.environ['VERSION_HISTORY_SIZE'] = '30'
+    os.environ['KEEP_BACKUP_DAYS'] = '30'
     os.environ['BACKUP_DIR'] = 'backups/'

@@ -7,8 +7,12 @@ from lib.command import Command
 from lib.config import Config
 from typing import List
 from pathlib import Path
+from datetime import datetime
 import yaml
 import os
+import re
+
+DATE_TIME_EXTRACTOR = re.compile(r'backup-(?P<date>\d\d\d\d-\d\d-\d\d)--(?P<time>\d\d-\d\d-\d\d).*.tar.gz')
 
 def try_set_envs():
     try:
@@ -18,7 +22,7 @@ def try_set_envs():
         print('Failed to load envs with set_envs.py: ', e)
         print('Try using the shell envs')
 
-
+try_set_envs()
 BACKUP_CONFIG = 'backup_config.yaml'
 
 
@@ -39,6 +43,16 @@ for config in configs:
     config.run()
 
 # cleanup old backups
-version_size = int(os.environ.get('VERSION_HISTORY_SIZE', 30))
-backup_dir = Path(os.environ.get('BACKUP_DIR', Path.cwd()))
-backups = backup_dir.glob('*.tar.gz')
+keep_for = int(os.environ.get('KEEP_BACKUP_DAYS', 30))
+backup_dir = Path(os.environ.get('BACKUP_DIR', Path.cwd().joinpath('backups')))
+for app in backup_dir.iterdir():
+    backups = app.glob('*.tar.gz')
+    for backup in backups:
+        match = DATE_TIME_EXTRACTOR.match(backup.name)
+        if not match:
+            break
+
+        today = datetime.date.today()
+        backup_date = datetime.datetime.strptime(match['date'], "%Y-%m-%d").date()
+        if backup_date < (today - datetime.timedelta(days=keep_for)):
+            os.remove(backup)

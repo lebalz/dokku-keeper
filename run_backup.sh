@@ -4,7 +4,7 @@ export DOKKU_HOST_IP=""
 export PUSH_GATEWAY=""
 export AUTH_USER=""
 export AUTH_PASSWORD=""
-export VERSION_HISTORY_SIZE=""
+export KEEP_BACKUP_DAYS=""
 export BACKUP_DIR=""
 
 ./backup.py

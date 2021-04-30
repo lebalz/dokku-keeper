@@ -70,7 +70,7 @@ class Config(IJob):
 
     @property
     def start(self) -> str:
-        return self.start_time.strftime('%d-%m-%Y--%H-%M-%S')
+        return self.start_time.strftime('%Y-%m-%d--%H-%M-%S')
 
     @property
     def backup_path(self) -> Path:
