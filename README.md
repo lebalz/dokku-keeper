@@ -11,7 +11,7 @@ crontab -e
 and append the following job:
 
 ```sh
-0 3 * * * /path/to/start_backuo.py
+0 3 * * * /path/to/run_backuo.py
 ```
 
 ...and list your cron jobs;

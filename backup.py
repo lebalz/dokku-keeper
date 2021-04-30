@@ -7,7 +7,7 @@ from lib.command import Command
 from lib.config import Config
 from typing import List
 from pathlib import Path
-from datetime import datetime
+import datetime
 import yaml
 import os
 import re
