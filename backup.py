@@ -1,16 +1,22 @@
 #!/usr/bin/env python3
 
-from set_envs import set_envs
-from lib.reporter import PromReporter
 from prometheus_client import CollectorRegistry
-from lib.helpers import path_for, prom_report
+from lib.helpers import prom_report
 from lib.rsync_job import RsyncJob
 from lib.command import Command
 from lib.config import Config
 from typing import List
+from pathlib import Path
 import yaml
+import os
 
-set_envs()
+def try_set_envs():
+    try:
+        from set_envs import set_envs
+        set_envs()
+    except Exception as e:
+        print('Failed to load envs with set_envs.py: ', e)
+        print('Try using the shell envs')
 
 
 BACKUP_CONFIG = 'backup_config.yaml'
@@ -31,3 +37,8 @@ configs = backup_configs()
 
 for config in configs:
     config.run()
+
+# cleanup old backups
+version_size = int(os.environ.get('VERSION_HISTORY_SIZE', 30))
+backup_dir = Path(os.environ.get('BACKUP_DIR', Path.cwd()))
+backups = backup_dir.glob('*.tar.gz')

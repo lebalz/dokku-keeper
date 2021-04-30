@@ -1,5 +1,23 @@
 # dokku keeper
 
+## cron job
+
+Copy the [start_backup.sh](start_backup.sh) to your server and set your ENV variables. Then add a cron job to run every night at 3am:
+
+```sh
+crontab -e
+```
+
+and append the following job:
+
+```sh
+0 3 * * * /path/to/start_backuo.py
+```
+
+...and list your cron jobs;
+```sh
+crontab -l : List the all your cron jobs.
+```
 
 ## ENV
 Required environment variables:
