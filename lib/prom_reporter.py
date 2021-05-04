@@ -17,7 +17,7 @@ CLEANUP_AFTER_S = 7
 
 
 class PromReporter:
-    url = os.environ.get('PROM_URL', '')
+    url = os.environ.get('PROM_PUSHGATEWAY_URL', None)
     jobs: list = []
 
     @classmethod
@@ -83,6 +83,9 @@ class PromReporter:
         g = Gauge(name=name, documentation=description, registry=registry, unit=unit)
         g.set(value)
         pushadd_to_gateway(gateway=cls.url, job=job, grouping_key=tags, registry=registry, handler=auth_handler)
+        if not cls.url:
+            print(time_s(), 'LOG', job, tags, value)
+            return
         print(time_s(), 'reported', job, tags, value)
         ref = {'start': time_s(), 'job': job, 'tags': tags, 'remove': remove}
         cls.jobs.append(ref)
@@ -98,6 +101,8 @@ class PromReporter:
 
     @classmethod
     def cleanup(cls, job: str, grouping_key: dict):
+        if not cls.url:
+            return
         print(time_s(), 'cleanup', job, grouping_key)
         delete_from_gateway(cls.url, job=job,
                             grouping_key=grouping_key,

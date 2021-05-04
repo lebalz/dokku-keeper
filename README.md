@@ -93,3 +93,36 @@ Executed after the file/folder synchronization completed. May be used to cleanup
 
 
 
+
+## On synology nas
+
+Required packages:
+- git (or git-server)
+- python3
+- nano, e.g. from [SynoCli File Tools](https://think.unblog.ch/en/how-to-install-nano-on-synology-nas/)
+
+Required services:
+- ssh
+- enabled user home (Check "Enable user home service" under `Control Panel > User > Advanced > User Home`)
+
+1. Create a shared folder where you want to store your backup (e.g. `dokku-backups`)
+2. Create a subfolder for the backups: `mkdir /volume1/dokku-backups/backups`
+3. cd to this directory (e.g. `cd /volume1/dokku-backups` and clone this repository (`git clone https://github.com/lebalz/dokku-keeper.git`)
+4. Install pip and the packages:
+```sh
+cd /volume1/dokku-backups/dokku-keeper
+sudo python3 -m ensurepip
+sudo /usr/local/bin/python3 -m pip install --upgrade pip
+
+sudo python3 -m pip install -r ./requirements.txt
+```
+5. copy and edit the script `run_backup.example.sh` with your credentials
+```sh
+cp run_backup.example.sh run_backup.sh
+nano run_backup.sh
+# Always use absolute paths!
+```
+6. Add a `backup_config.yaml` to your dokku host (see the [example backup_config.yaml](backup_config.yaml))
+7. Create a new task: `Control Panel > Task Scheduler > Create Scheduled Task`
+8. Done 🎊
+
