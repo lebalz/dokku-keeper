@@ -4,6 +4,7 @@ from prometheus_client import CollectorRegistry, Gauge, Info, pushadd_to_gateway
 from prometheus_client.exposition import basic_auth_handler, delete_from_gateway
 import functools
 from lib.helpers import sanitize_job_name, time_s
+from urllib.error import URLError
 
 
 def auth_handler(url, method, timeout, headers, data):
@@ -82,10 +83,12 @@ class PromReporter:
         registry = CollectorRegistry()
         g = Gauge(name=name, documentation=description, registry=registry, unit=unit)
         g.set(value)
-        pushadd_to_gateway(gateway=cls.url, job=job, grouping_key=tags, registry=registry, handler=auth_handler)
-        if not cls.url:
+        try:
+            pushadd_to_gateway(gateway=cls.url, job=job, grouping_key=tags, registry=registry, handler=auth_handler)
+        except URLError:
             print(time_s(), 'LOG', job, tags, value)
             return
+
         print(time_s(), 'reported', job, tags, value)
         ref = {'start': time_s(), 'job': job, 'tags': tags, 'remove': remove}
         cls.jobs.append(ref)
@@ -101,9 +104,11 @@ class PromReporter:
 
     @classmethod
     def cleanup(cls, job: str, grouping_key: dict):
-        if not cls.url:
+        try:
+            delete_from_gateway(cls.url, job=job,
+                                grouping_key=grouping_key,
+                                handler=auth_handler)
+        except URLError:
             return
+
         print(time_s(), 'cleanup', job, grouping_key)
-        delete_from_gateway(cls.url, job=job,
-                            grouping_key=grouping_key,
-                            handler=auth_handler)
