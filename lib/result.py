@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Literal, Optional
 
 
 class Result:
@@ -18,3 +18,9 @@ class Result:
     @property
     def success(self) -> bool:
         return self.error is None
+
+    @property
+    def state(self) -> Literal['success', 'error']:
+        if self.success:
+            return 'success'
+        return 'error'

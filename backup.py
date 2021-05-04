@@ -1,9 +1,18 @@
 #!/usr/bin/env python3
 
-from prometheus_client import CollectorRegistry
-from lib.helpers import prom_report
-from lib.rsync_job import RsyncJob
+def try_set_envs():
+    try:
+        from set_envs import set_envs
+        set_envs()
+    except Exception as e:
+        print('Failed to load envs with set_envs.py: ', e)
+        print('Try using the shell envs')
+
+
+try_set_envs()
+
 from lib.command import Command
+from lib.rsync_job import RsyncJob
 from lib.config import Config
 from typing import List
 from pathlib import Path
@@ -14,26 +23,16 @@ import re
 
 DATE_TIME_EXTRACTOR = re.compile(r'backup-(?P<date>\d\d\d\d-\d\d-\d\d)--(?P<time>\d\d-\d\d-\d\d).*.tar.gz')
 
-def try_set_envs():
-    try:
-        from set_envs import set_envs
-        set_envs()
-    except Exception as e:
-        print('Failed to load envs with set_envs.py: ', e)
-        print('Try using the shell envs')
 
-try_set_envs()
 BACKUP_CONFIG = 'backup_config.yaml'
 
 
 def backup_configs() -> List[Config]:
-    registry = CollectorRegistry()
-    cmd = Command(f'cat /root/{BACKUP_CONFIG}', name='fetch_config')
-    cmd.run(registry)
+    cmd = Command(app_name='dokku-keeper', cmd=f'cat /root/{BACKUP_CONFIG}', name='fetch_config')
+    cmd.run()
     if not cmd.result.success:
         raise Exception(cmd.result.error)
     configs = yaml.full_load(cmd.result.result)
-    prom_report('fetch_config', registry)
     return [Config(app, data) for app, data in configs.items()]
 
 
