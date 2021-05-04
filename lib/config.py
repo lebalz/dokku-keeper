@@ -59,7 +59,10 @@ class Config(IJob):
             unit='mb'
         )
         PromReporter.report(self.app, 'backup', 'backup duration', time_s() - t0, 's', {})
-        PromReporter.jobs.remove(ref)
+        try:
+            PromReporter.jobs.remove(ref)
+        except ValueError:
+            pass
         shutil.rmtree(self.backup_path)
 
     @property

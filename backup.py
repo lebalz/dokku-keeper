@@ -63,7 +63,10 @@ for app in backup_dir.iterdir():
         backup_date = datetime.datetime.strptime(match['date'], "%Y-%m-%d").date()
         if backup_date < (today - datetime.timedelta(days=keep_for)):
             os.remove(backup)
-PromReporter.jobs.remove(ref)
+try:
+    PromReporter.jobs.remove(ref)
+except ValueError:
+    pass
 PromReporter.report('dokku-keeper', 'backup', 'backup duration', time_s() - t0, 's', {'name': 'full-backup'})
 while len(PromReporter.jobs) > 0:
     print('wait for jobs to finish: ', len(PromReporter.jobs))
