@@ -23,6 +23,13 @@ crontab -l : List the all your cron jobs.
 Required environment variables:
 - `DOKKU_USER` (e.g. 'root')
 - `DOKKU_HOST_IP`
+- `BACKUP_DIR` (absolute path)
+- `KEEP_BACKUP_DAYS`
+
+Optional env's to report to a prometheus push gateway:
+- `PROM_PUSHGATEWAY_URL`
+- `AUTH_USER`
+- `AUTH_PASSWORD`
 
 # Backup Configuration
 
