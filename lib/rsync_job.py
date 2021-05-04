@@ -1,4 +1,5 @@
-from lib.loki_reporter import LokiReporter
+# from lib.loki_reporter import LokiReporter
+from lib.prom_reporter import PromReporter
 import subprocess
 from lib.ijob import IJob
 from lib.helpers import path_for, sanitize_job_name, time_s
@@ -53,7 +54,7 @@ class RsyncJob(IJob):
     def file_size_bytes(self) -> int:
         return self.target_dir.stat().st_size
 
-    @LokiReporter.reports
+    @PromReporter.reports
     def run(self) -> None:
         user = os.environ['DOKKU_USER']
         host = os.environ['DOKKU_HOST_IP']

@@ -1,4 +1,5 @@
 # from lib.reporter import Reporter
+from lib.prom_reporter import PromReporter
 import os
 import shutil
 from lib.helpers import backup_commands, make_tarfile, sanitize_job_name, time_s
@@ -38,6 +39,9 @@ class Config(IJob):
     # def report(self, reporter: Reporter):
     #     pass
     def run(self):
+        t0 = time_s()
+        ref = PromReporter.report(self.app, 'backup', 'backup duration', 0, 's', {}, False)
+
         for cmd in backup_commands(self, 'pre-backup'):
             cmd.run()
         for cmd in backup_commands(self, 'backup'):
@@ -47,10 +51,15 @@ class Config(IJob):
         for cmd in backup_commands(self, 'post-backup'):
             cmd.run()
         make_tarfile(self.backup_tar_path, self.backup_path)
-
-        # s2 = Gauge(f'backup_dokku_size_mb', 'backup.tar.gz size', registry=registry)
-        # s2.set(self.get_tar_size_mb)
-
+        PromReporter.report(
+            self.app,
+            'backup_size',
+            'size of the compressed backup',
+            self.get_tar_size_mb,
+            unit='mb'
+        )
+        PromReporter.report(self.app, 'backup', 'backup duration', time_s() - t0, 's', {})
+        PromReporter.jobs.remove(ref)
         shutil.rmtree(self.backup_path)
 
     @property

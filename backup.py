@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 
+from lib.helpers import time_s
+import time
+
+
 def try_set_envs():
     try:
         from set_envs import set_envs
@@ -13,6 +17,7 @@ try_set_envs()
 
 from lib.command import Command
 from lib.rsync_job import RsyncJob
+from lib.prom_reporter import PromReporter
 from lib.config import Config
 from typing import List
 from pathlib import Path
@@ -25,6 +30,9 @@ DATE_TIME_EXTRACTOR = re.compile(r'backup-(?P<date>\d\d\d\d-\d\d-\d\d)--(?P<time
 
 
 BACKUP_CONFIG = 'backup_config.yaml'
+
+t0 = time_s()
+ref = PromReporter.report('dokku-keeper', 'backup', 'backup duration', 0, 's', {'name': 'full-backup'}, False)
 
 
 def backup_configs() -> List[Config]:
@@ -55,3 +63,9 @@ for app in backup_dir.iterdir():
         backup_date = datetime.datetime.strptime(match['date'], "%Y-%m-%d").date()
         if backup_date < (today - datetime.timedelta(days=keep_for)):
             os.remove(backup)
+PromReporter.jobs.remove(ref)
+PromReporter.report('dokku-keeper', 'backup', 'backup duration', time_s() - t0, 's', {'name': 'full-backup'})
+while len(PromReporter.jobs) > 0:
+    print('wait for jobs to finish: ', len(PromReporter.jobs))
+    time.sleep(1)
+    PromReporter.check_cleanup(force=True)
