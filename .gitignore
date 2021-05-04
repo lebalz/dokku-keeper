@@ -3,3 +3,4 @@
 __pycache__
 set_envs.py
 backups/
+reporter_test_*.py

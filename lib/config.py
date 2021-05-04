@@ -1,9 +1,8 @@
 # from lib.reporter import Reporter
+from lib.prom_reporter import PromReporter
 import os
 import shutil
-from lib.helpers import backup_commands, make_tarfile, prom_report, sanitize_job_name, time_s
-from prometheus_client import CollectorRegistry, Gauge
-from prometheus_client.metrics import MetricWrapperBase
+from lib.helpers import backup_commands, make_tarfile, sanitize_job_name, time_s
 from lib.ijob import IJob
 from lib.rsync_job import RsyncJob
 from lib.result import Result
@@ -25,47 +24,42 @@ class Config(IJob):
         self.start_time = datetime.now()
         self.backup_path.mkdir(exist_ok=True, parents=True)
         if 'commands' in data:
-            self.commands = [Command.fromDict(name, cmd, self.backup_path) for name, cmd in data['commands'].items()]
+            self.commands = [Command.fromDict(app, name, cmd, self.backup_path)
+                             for name, cmd in data['commands'].items()]
         else:
             self.commands = []
         self.rsync_jobs = []
         if 'files' in data:
             for file in data['files']:
-                self.rsync_jobs.append(RsyncJob(file, self.backup_path, 'file'))
+                self.rsync_jobs.append(RsyncJob(app, file, self.backup_path, 'file'))
         if 'folders' in data:
             for folder in data['folders']:
-                self.rsync_jobs.append(RsyncJob(folder, self.backup_path, 'dir'))
+                self.rsync_jobs.append(RsyncJob(app, folder, self.backup_path, 'dir'))
 
     # def report(self, reporter: Reporter):
     #     pass
-
     def run(self):
         t0 = time_s()
+        ref = PromReporter.report(self.app, 'backup', 'backup duration', 0, 's', {}, False)
+
         for cmd in backup_commands(self, 'pre-backup'):
-            registry = CollectorRegistry()
-            cmd.run(registry)
-            prom_report(self.prefix(cmd.report_name), registry)
+            cmd.run()
         for cmd in backup_commands(self, 'backup'):
-            registry = CollectorRegistry()
-            cmd.run(registry)
-            prom_report(self.prefix(cmd.report_name), registry)
+            cmd.run()
         for rsync_job in self.rsync_jobs:
-            registry = CollectorRegistry()
-            rsync_job.run(registry)
-            prom_report(self.prefix(rsync_job.report_name), registry)
+            rsync_job.run()
         for cmd in backup_commands(self, 'post-backup'):
-            registry = CollectorRegistry()
-            cmd.run(registry)
-            prom_report(self.prefix(cmd.report_name), registry)
+            cmd.run()
         make_tarfile(self.backup_tar_path, self.backup_path)
-
-        registry = CollectorRegistry()
-        s1 = Gauge(f'backup_dokku_time_s', 'Total time for the backup (seconds)')
-        s1.set(time_s() - t0)
-        s2 = Gauge(f'backup_dokku_size_mb', 'backup.tar.gz size', registry=registry)
-        s2.set(self.get_tar_size_mb)
-        prom_report(self.prefix(self.report_name), registry)
-
+        PromReporter.report(
+            self.app,
+            'backup_size',
+            'size of the compressed backup',
+            self.get_tar_size_mb,
+            unit='mb'
+        )
+        PromReporter.report(self.app, 'backup', 'backup duration', time_s() - t0, 's', {})
+        PromReporter.jobs.remove(ref)
         shutil.rmtree(self.backup_path)
 
     @property

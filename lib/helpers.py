@@ -14,15 +14,6 @@ def time_s() -> float:
     return time_ns() / 1000000000.0
 
 
-from prometheus_client import CollectorRegistry
-
-
-def prom_report(job_name: str, registry: CollectorRegistry):
-    from lib.reporter import PromReporter
-    reporter = PromReporter(os.environ['PUSH_GATEWAY'], job_name)
-    reporter.report(registry)
-
-
 def make_tarfile(output_filename: Path, source_dir: Path):
     with tarfile.open(output_filename, "w:gz") as tar:
         tar.add(source_dir, arcname=Path(source_dir).name)
