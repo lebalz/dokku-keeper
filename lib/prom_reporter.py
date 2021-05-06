@@ -1,4 +1,5 @@
 import os
+from time import time_ns
 from typing import Any, Dict, List, Union
 from prometheus_client import CollectorRegistry, Gauge, Info, pushadd_to_gateway
 from prometheus_client.exposition import basic_auth_handler, delete_from_gateway
@@ -18,6 +19,7 @@ CLEANUP_AFTER_S = int(os.environ.get('METRICS_TTL_S', 10), 10)
 
 
 class ReportJob:
+    backup_id = time_ns()
     url = os.environ.get('PROM_PUSHGATEWAY_URL', None)
     start: float
     job: str
@@ -31,6 +33,7 @@ class ReportJob:
         self.start = time_s()
         self.job = job
         self.tags = tags
+        self.tags['backup_id'] = ReportJob.backup_id
         self.description = description
         self.value = value
         self.unit = unit
