@@ -6,5 +6,6 @@ export AUTH_USER=""
 export AUTH_PASSWORD=""
 export KEEP_BACKUP_DAYS=""
 export BACKUP_DIR=""
+export METRICS_TTL_S="10"
 
 ./backup.py

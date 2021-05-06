@@ -8,9 +8,9 @@ def try_set_envs():
     try:
         from set_envs import set_envs
         set_envs()
-    except Exception as e:
-        print('Failed to load envs with set_envs.py: ', e)
-        print('Try using the shell envs')
+        print('Using envs from set_envs.py: ')
+    except Exception:
+        print('Using the shell envs')
 
 
 try_set_envs()
@@ -32,7 +32,8 @@ DATE_TIME_EXTRACTOR = re.compile(r'backup-(?P<date>\d\d\d\d-\d\d-\d\d)--(?P<time
 BACKUP_CONFIG = 'backup_config.yaml'
 
 t0 = time_s()
-ref = PromReporter.report('dokku-keeper', 'backup', 'backup duration', 0, 's', {'name': 'full-backup'}, False)
+duration_report_job = PromReporter.report(
+    'dokku-keeper', 'backup', 'backup duration', 0, 's', {'name': 'full-backup'}, False)
 
 
 def backup_configs() -> List[Config]:
@@ -63,12 +64,10 @@ for app in backup_dir.iterdir():
         backup_date = datetime.datetime.strptime(match['date'], "%Y-%m-%d").date()
         if backup_date < (today - datetime.timedelta(days=keep_for)):
             os.remove(backup)
-try:
-    PromReporter.jobs.remove(ref)
-except ValueError:
-    pass
-PromReporter.report('dokku-keeper', 'backup', 'backup duration', time_s() - t0, 's', {'name': 'full-backup'})
+
+duration_report_job.update_and_report(time_s() - t0)
+PromReporter.cleanup_job(duration_report_job)
 while len(PromReporter.jobs) > 0:
     print('wait for jobs to finish: ', len(PromReporter.jobs))
     time.sleep(1)
-    PromReporter.check_cleanup(force=True)
+    PromReporter.check_cleanup()

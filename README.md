@@ -30,6 +30,7 @@ Optional env's to report to a prometheus push gateway:
 - `PROM_PUSHGATEWAY_URL`
 - `AUTH_USER`
 - `AUTH_PASSWORD`
+- `METRICS_TTL_S` prometheus push gateway does not support a ttl, so it has to be done manually. Default is `10s` (should be twice the time as your scrape intervall)
 
 # Backup Configuration
 

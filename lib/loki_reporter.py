@@ -66,7 +66,6 @@ class LokiReporter:
                 'duration_s': cmd.duration
             }
         msg = f'app={cmd.app_name} name={cmd.name} command={cmd.cmd} stage={cmd.stage} duration_s={cmd.duration}'
-        print(msg)
         level = 'info'
         if not cmd.result.success:
             data['error'] = cmd.result.error
@@ -90,7 +89,6 @@ class LokiReporter:
             }
         msg = f'app={job.app_name} path={job.target_dir} file_count={job.synced_files} size_bytes={job.size} duration_s={job.duration}'
         level = 'info'
-        print(msg)
         if not job.result.success:
             data['error'] = job.result.error
             level = 'error'

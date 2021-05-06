@@ -1,5 +1,5 @@
 import os
-from typing import Any, Dict, Union
+from typing import Any, Dict, List, Union
 from prometheus_client import CollectorRegistry, Gauge, Info, pushadd_to_gateway
 from prometheus_client.exposition import basic_auth_handler, delete_from_gateway
 import functools
@@ -14,12 +14,64 @@ def auth_handler(url, method, timeout, headers, data):
     return basic_auth_handler(url, method, timeout, headers, data, username, password)
 
 
-CLEANUP_AFTER_S = 7
+CLEANUP_AFTER_S = int(os.environ.get('METRICS_TTL_S', 10), 10)
+
+
+class ReportJob:
+    url = os.environ.get('PROM_PUSHGATEWAY_URL', None)
+    start: float
+    job: str
+    description: str
+    value: Union[int, float]
+    unit: str
+    name: str
+    tags: dict
+
+    def __init__(self, job: str, name: str, description: str, value: Union[int, float], unit: str, tags: Dict = {}) -> None:
+        self.start = time_s()
+        self.job = job
+        self.tags = tags
+        self.description = description
+        self.value = value
+        self.unit = unit
+        self.name = name
+
+    def report(self):
+        tags = {sanitize_job_name(key): value for key, value in self.tags.items()}
+
+        job = sanitize_job_name(self.job)
+        registry = CollectorRegistry()
+        g = Gauge(name=self.name, documentation=self.description, registry=registry, unit=self.unit)
+        g.set(self.value)
+        try:
+            pushadd_to_gateway(gateway=self.url, job=job, grouping_key=tags, registry=registry, handler=auth_handler)
+        except URLError:
+            print("{:.2f}".format(time_s() - PromReporter.init_time), 'LOG', self)
+            return
+
+        print("{:.2f}".format(time_s() - PromReporter.init_time), 'reported', self)
+
+    def update_and_report(self, value: Union[int, float]):
+        self.start = time_s()
+        self.value = value
+        self.report()
+
+    def remove(self):
+        try:
+            delete_from_gateway(self.url, job=self.job,
+                                grouping_key=self.tags,
+                                handler=auth_handler)
+        except URLError:
+            return
+
+    def __str__(self) -> str:
+        return f'start: {"{:.2f}".format(self.start - PromReporter.init_time)}, job: {self.job}:{self.name}, tags: {self.tags}, value: {self.value}{self.unit}'
 
 
 class PromReporter:
     url = os.environ.get('PROM_PUSHGATEWAY_URL', None)
-    jobs: list = []
+    jobs: List[ReportJob] = []
+    init_time: float = time_s()
 
     @classmethod
     def reports(cls, func):
@@ -77,38 +129,22 @@ class PromReporter:
     @classmethod
     def report(cls, job: str, name: str, description: str, value: Union[int, float], unit: str, tags: Dict = {}, remove: bool = True):
         cls.check_cleanup()
-        tags = {sanitize_job_name(key): value for key, value in tags.items()}
-
-        job = sanitize_job_name(job)
-        registry = CollectorRegistry()
-        g = Gauge(name=name, documentation=description, registry=registry, unit=unit)
-        g.set(value)
-        try:
-            pushadd_to_gateway(gateway=cls.url, job=job, grouping_key=tags, registry=registry, handler=auth_handler)
-        except URLError:
-            print(time_s(), 'LOG', job, tags, value)
-            return
-
-        print(time_s(), 'reported', job, tags, value)
-        ref = {'start': time_s(), 'job': job, 'tags': tags, 'remove': remove}
-        cls.jobs.append(ref)
-        return ref
+        report_job = ReportJob(job=job, name=name, description=description, value=value, unit=unit, tags=tags)
+        report_job.report()
+        if remove:
+            cls.jobs.append(report_job)
+        return report_job
 
     @classmethod
-    def check_cleanup(cls, force: bool = False):
-        print('@cleanup: job size', len(cls.jobs))
+    def cleanup_job(cls, job: ReportJob):
+        if job.start + CLEANUP_AFTER_S < time_s():
+            job.remove()
+        else:
+            cls.jobs.append(job)
+
+    @classmethod
+    def check_cleanup(cls):
         for job in cls.jobs:
-            if job['start'] + CLEANUP_AFTER_S < time_s() and (force or job['remove']):
-                cls.cleanup(job['job'], job['tags'])
+            if job.start + CLEANUP_AFTER_S < time_s():
+                job.remove()
                 cls.jobs.remove(job)
-
-    @classmethod
-    def cleanup(cls, job: str, grouping_key: dict):
-        try:
-            delete_from_gateway(cls.url, job=job,
-                                grouping_key=grouping_key,
-                                handler=auth_handler)
-        except URLError:
-            return
-
-        print(time_s(), 'cleanup', job, grouping_key)

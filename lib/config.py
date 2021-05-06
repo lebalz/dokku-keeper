@@ -40,7 +40,7 @@ class Config(IJob):
     #     pass
     def run(self):
         t0 = time_s()
-        ref = PromReporter.report(self.app, 'backup', 'backup duration', 0, 's', {}, False)
+        report_job = PromReporter.report(self.app, 'backup', 'backup duration', 0, 's', {}, False)
 
         for cmd in backup_commands(self, 'pre-backup'):
             cmd.run()
@@ -58,11 +58,8 @@ class Config(IJob):
             self.get_tar_size_mb,
             unit='mb'
         )
-        PromReporter.report(self.app, 'backup', 'backup duration', time_s() - t0, 's', {})
-        try:
-            PromReporter.jobs.remove(ref)
-        except ValueError:
-            pass
+        report_job.update_and_report(time_s() - t0)
+        PromReporter.cleanup_job(report_job)
         shutil.rmtree(self.backup_path)
 
     @property

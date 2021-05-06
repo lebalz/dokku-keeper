@@ -9,3 +9,4 @@ def set_envs():
     os.environ['AUTH_PASSWORD'] = 'asdfasdf'
     os.environ['KEEP_BACKUP_DAYS'] = '30'
     os.environ['BACKUP_DIR'] = 'backups/'
+    os.environ['METRICS_TTL_S'] = '10'
