@@ -57,9 +57,12 @@ class ReportJob:
         self.report()
 
     def remove(self):
+        job = sanitize_job_name(self.job)
+        tags = {sanitize_job_name(key): value for key, value in self.tags.items()}
+
         try:
-            delete_from_gateway(self.url, job=self.job,
-                                grouping_key=self.tags,
+            delete_from_gateway(self.url, job=job,
+                                grouping_key=tags,
                                 handler=auth_handler)
         except URLError:
             return
