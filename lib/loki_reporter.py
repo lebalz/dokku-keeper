@@ -23,6 +23,8 @@ class LokiReporter:
     def reports(cls, func):
         @functools.wraps(func)
         def wrapper_timer(*args, **kwargs):
+            if not os.environ.get('LOKI_URL', None):
+                return
             from lib.command import Command
             from lib.rsync_job import RsyncJob
             value = func(*args, **kwargs)

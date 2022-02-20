@@ -15,7 +15,7 @@ def auth_handler(url, method, timeout, headers, data):
     return basic_auth_handler(url, method, timeout, headers, data, username, password)
 
 
-CLEANUP_AFTER_S = int(os.environ.get('METRICS_TTL_S', 10), 10)
+CLEANUP_AFTER_S = int(os.environ.get('METRICS_TTL_S', '10'), 10)
 
 
 class ReportJob:
@@ -83,6 +83,8 @@ class PromReporter:
     def reports(cls, func):
         @functools.wraps(func)
         def wrapper_timer(*args, **kwargs):
+            if not os.environ.get('PROM_PUSHGATEWAY_URL', None):
+                return
             from lib.command import Command
             from lib.rsync_job import RsyncJob
             value = func(*args, **kwargs)
