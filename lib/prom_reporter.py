@@ -9,8 +9,8 @@ from urllib.error import URLError
 
 
 def auth_handler(url, method, timeout, headers, data):
-    username = os.environ['AUTH_USER']
-    password = os.environ['AUTH_PASSWORD']
+    username = os.environ.get('AUTH_USER', None)
+    password = os.environ.get('AUTH_PASSWORD', None)
     headers.append(['User-Agent', 'Mozilla/5.0'])
     return basic_auth_handler(url, method, timeout, headers, data, username, password)
 

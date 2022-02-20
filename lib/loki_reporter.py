@@ -10,8 +10,8 @@ import functools
 
 class LokiReporter:
 
-    username = os.environ['AUTH_USER']
-    password = os.environ['AUTH_PASSWORD']
+    username = os.environ.get('AUTH_USER', None)
+    password = os.environ.get('AUTH_PASSWORD', None)
     reporter_name = os.environ.get('KEEPER_NAME', 'dokku-keeper')
     handler: logging_loki.LokiHandler = logging_loki.LokiHandler(
         url=os.environ.get('LOKI_URL', ''),
