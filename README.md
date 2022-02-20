@@ -106,7 +106,7 @@ Executed after the file/folder synchronization completed. May be used to cleanup
 
 Required packages:
 - git (or git-server)
-- python3
+- python3 (for DSM < v7, v7+ has python 3 installed)
 - nano, e.g. from [SynoCli File Tools](https://think.unblog.ch/en/how-to-install-nano-on-synology-nas/)
 
 Required services:
@@ -120,7 +120,9 @@ Required services:
 ```sh
 cd /volume1/dokku-backups/dokku-keeper
 sudo python3 -m ensurepip
-sudo /usr/local/bin/python3 -m pip install --upgrade pip
+# for dsm < 7
+# sudo /usr/local/bin/python3 -m pip install --upgrade pip
+sudo python3 -m pip install --upgrade pip
 
 sudo python3 -m pip install -r ./requirements.txt
 ```
