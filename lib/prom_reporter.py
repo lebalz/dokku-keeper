@@ -84,7 +84,7 @@ class PromReporter:
         @functools.wraps(func)
         def wrapper_timer(*args, **kwargs):
             if not os.environ.get('PROM_PUSHGATEWAY_URL', None):
-                return
+                return func(*args, **kwargs)
             from lib.command import Command
             from lib.rsync_job import RsyncJob
             value = func(*args, **kwargs)
