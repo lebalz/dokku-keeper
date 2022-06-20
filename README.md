@@ -136,3 +136,24 @@ nano run_backup.sh
 7. Create a new task: `Control Panel > Task Scheduler > Create Scheduled Task`
 8. Done 🎊
 
+
+
+## Restore backup to inspect earlier state
+
+If you want to restore a backup, you can either run [extract_backup.py](extract_backup.py) or you extract the `.tar` file and proceed as follows (where `foobar` ist your actual username):
+
+```bash
+psql -d postgres -U foobar
+
+# create new db
+CREATE DATABASE backup_db;
+# quit
+\q
+
+# restore
+pg_restore --verbose --clean --no-acl --no-owner --host=localhost --dbname=backup_db --username=foobar backup.dump
+
+# connect
+
+psql -d backup_db -U foobar
+```
