@@ -2,7 +2,7 @@
 
 ## cron job
 
-Copy the [start_backup.sh](start_backup.sh) to your server and set your ENV variables. Then add a cron job to run every night at 3am:
+Copy the [run_backup.example.sh](run_backup.example.sh) to your server and set your ENV variables. Then add a cron job to run every night at 3am:
 
 ```sh
 crontab -e
@@ -11,7 +11,7 @@ crontab -e
 and append the following job:
 
 ```sh
-0 3 * * * /path/to/run_backuo.py
+0 3 * * * /path/to/run_backup.sh
 ```
 
 ...and list your cron jobs;
