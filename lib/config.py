@@ -1,4 +1,3 @@
-from lib.prom_reporter import PromReporter
 import os
 import shutil
 from lib.helpers import backup_commands, make_tarfile, sanitize_job_name, time_s
@@ -24,17 +23,15 @@ class Config(IJob):
         self.rsync_jobs: list[RsyncJob] = []
         if 'files' in data:
             for file in data['files']:
-                self.rsync_jobs.append(RsyncJob(app, file, self.backup_path, 'file'))
+                self.rsync_jobs.append(
+                    RsyncJob(app, file, self.backup_path, 'file'))
         if 'folders' in data:
             for folder in data['folders']:
-                self.rsync_jobs.append(RsyncJob(app, folder, self.backup_path, 'dir'))
+                self.rsync_jobs.append(
+                    RsyncJob(app, folder, self.backup_path, 'dir'))
 
-    # def report(self, reporter: Reporter):
-    #     pass
     def run(self):
         t0 = time_s()
-        report_job = PromReporter.report(self.app, 'backup', 'backup duration', 0, 's', {}, False)
-
         for cmd in backup_commands(self, 'pre-backup'):
             cmd.run()
         for cmd in backup_commands(self, 'backup'):
@@ -44,15 +41,6 @@ class Config(IJob):
         for cmd in backup_commands(self, 'post-backup'):
             cmd.run()
         make_tarfile(self.backup_tar_path, self.backup_path)
-        PromReporter.report(
-            self.app,
-            'backup_size',
-            'size of the compressed backup',
-            self.get_tar_size_mb,
-            unit='mb'
-        )
-        report_job.update_and_report(time_s() - t0)
-        PromReporter.cleanup_job(report_job)
         shutil.rmtree(self.backup_path)
 
     @property
@@ -81,3 +69,6 @@ class Config(IJob):
     @property
     def report_name(self):
         return sanitize_job_name(self.app)
+
+    def report(self):
+        return f'{self.report_name}: backup size: {self.get_tar_size_mb:.2f} MB, duration: {time_s() - self.start_time.timestamp():.2f}s'

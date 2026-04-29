@@ -1,4 +1,3 @@
-from lib.prom_reporter import PromReporter
 import os
 import subprocess
 from lib.helpers import path_for, sanitize_job_name, time_s
@@ -7,8 +6,9 @@ from typing import Literal
 from lib.result import Result
 
 type Stage = Literal['pre-backup', 'backup', 'post-backup']
-class Command:
 
+
+class Command:
     def __init__(self, app_name: str, cmd: str, name: str | None = None, to: str | None = None, stage: Stage | None = None, root: Path | None = None) -> None:
         self.app_name = app_name
         self.name = str(name)
@@ -24,7 +24,6 @@ class Command:
     def __str__(self) -> str:
         return f'{f"{self.stage}: " if self.stage else ""}{self.cmd}{f" > {self.to}" if self.to else ""}'
 
-    @PromReporter.reports
     def run(self) -> None:
         user = os.environ['DOKKU_USER']
         host = os.environ['DOKKU_HOST_IP']

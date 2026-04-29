@@ -16,5 +16,9 @@
       }
     }
   },
-  "remoteUser": "vscode"
+  "remoteUser": "vscode",
+  "remoteEnv": {
+    "CONFIG_DIR": "/workspaces/dokku-keeper/data",
+    "CONFIG_FILE": "config.yaml"
+  }
 }

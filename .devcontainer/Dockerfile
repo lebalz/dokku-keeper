@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/devcontainers/python:1-3.11-bullseye
+FROM mcr.microsoft.com/devcontainers/python:3.14-bookworm
 
 # The upstream image can include a stale Yarn apt source with a rotated key.
 # We do not need Yarn here, so drop that source to keep apt-get update reliable.

@@ -1,4 +1,3 @@
-from lib.prom_reporter import PromReporter
 import subprocess
 from lib.ijob import IJob
 from lib.helpers import path_for, sanitize_job_name, time_s
@@ -9,7 +8,8 @@ import re
 import os
 # 'total size is 13.72M  speedup is 1.92'
 # 'total size is 1.05K  speedup is 1.37'
-SIZE_EXTRACTOR = re.compile(r'total size is (?P<size>\d+\.\d+)(?P<unit>[KMG])?')
+SIZE_EXTRACTOR = re.compile(
+    r'total size is (?P<size>\d+\.\d+)(?P<unit>[KMG])?')
 
 
 class RsyncJob(IJob):
@@ -49,7 +49,6 @@ class RsyncJob(IJob):
     def file_size_bytes(self) -> int:
         return self.target_dir.stat().st_size
 
-    @PromReporter.reports
     def run(self) -> None:
         user = os.environ['DOKKU_USER']
         host = os.environ['DOKKU_HOST_IP']
@@ -76,4 +75,4 @@ class RsyncJob(IJob):
         return sanitize_job_name(self.path)
 
     def report(self):
-        pass
+        return f'{self.report_name}: {self.synced_files} files, {self.size} bytes, duration: {self.duration:.2f}s'
