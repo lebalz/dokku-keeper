@@ -1,15 +1,15 @@
-from typing import Literal, Optional
+from typing import Literal
 
 
 class Result:
-    raw_result: bytes
-    error: Optional[str] = None
 
     def __init__(self, raw_result: bytes, raw_error: bytes) -> None:
         self.raw_result = raw_result
         err = raw_error.decode('utf-8')
         if err:
             self.error = err
+        else:
+            self.error = None
 
     @property
     def result(self) -> str:

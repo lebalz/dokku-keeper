@@ -1,10 +1,9 @@
-# from lib.loki_reporter import LokiReporter
 from lib.prom_reporter import PromReporter
 import subprocess
 from lib.ijob import IJob
 from lib.helpers import path_for, sanitize_job_name, time_s
 from lib.result import Result
-from typing import List, Literal, Optional, Union
+from typing import Literal
 from pathlib import Path
 import re
 import os
@@ -14,16 +13,12 @@ SIZE_EXTRACTOR = re.compile(r'total size is (?P<size>\d+\.\d+)(?P<unit>[KMG])?')
 
 
 class RsyncJob(IJob):
-    path: Path
-    root: Path
-    type: Literal['file', 'dir']
-    result: Optional[Result] = None
-    synced_files: int = 0
-    size: int = 0
-    app_name: str
-    duration: Optional[float] = None
 
-    def __init__(self, app_name: str, path: Union[str, Path], root: Path, type: Literal['file', 'dir']) -> None:
+    def __init__(self, app_name: str, path: str | Path, root: Path, type: Literal['file', 'dir']) -> None:
+        self.result: Result | None = None
+        self.synced_files: int = 0
+        self.size: int = 0
+        self.duration: float | None = None
         self.path = Path(path)
         self.app_name = app_name
         self.root = root

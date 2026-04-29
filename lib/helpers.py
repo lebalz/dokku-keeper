@@ -1,9 +1,9 @@
 
 from __future__ import annotations
-import os
+from pathlib import Path
 import tarfile
 from pathlib import Path
-from typing import Literal, Union, List
+from typing import Literal
 from time import time_ns
 
 
@@ -21,11 +21,11 @@ def make_tarfile(output_filename: Path, source_dir: Path):
 
 def backup_commands(config, stage: Literal['pre-backup', 'backup', 'post-backup']):
     from lib.command import Command
-    res: List[Command] = [cmd for cmd in config.commands if cmd.stage == stage]
+    res: list[Command] = [cmd for cmd in config.commands if cmd.stage == stage]
     return res
 
 
-def sanitize_job_name(name: str) -> str:
+def sanitize_job_name(name: str | Path) -> str:
     jn = str(name)
     jn = jn.replace('/', '_')
     jn = jn.replace(' ', '')
@@ -37,7 +37,7 @@ def sanitize_job_name(name: str) -> str:
     return jn.lower()
 
 
-def path_for(root: Union[str, Path], destination: Union[str, Path]) -> Path:
+def path_for(root: str | Path, destination: str | Path) -> Path:
     '''joins root path with (potentially absolute) destination path
 
     Example

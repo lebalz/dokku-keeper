@@ -19,7 +19,6 @@ from lib.command import Command
 from lib.rsync_job import RsyncJob
 from lib.prom_reporter import PromReporter
 from lib.config import Config
-from typing import List
 from pathlib import Path
 import datetime
 import yaml
@@ -36,9 +35,11 @@ duration_report_job = PromReporter.report(
     'dokku-keeper', 'backup', 'backup duration', 0, 's', {'name': 'full-backup'}, False)
 
 
-def backup_configs() -> List[Config]:
+def backup_configs() -> list[Config]:
     cmd = Command(app_name='dokku-keeper', cmd=f'cat /root/{BACKUP_CONFIG}', name='fetch_config')
     cmd.run()
+    if not cmd.result:
+        raise Exception('Failed to fetch backup config')
     if not cmd.result.success:
         raise Exception(cmd.result.error)
     configs = yaml.full_load(cmd.result.result)

@@ -1,32 +1,25 @@
-# from lib.loki_reporter import LokiReporter
 from lib.prom_reporter import PromReporter
 import os
 import subprocess
 from lib.helpers import path_for, sanitize_job_name, time_s
 from pathlib import Path
-from typing import Dict, List, Literal, Optional
+from typing import Literal
 from lib.result import Result
 
-
+type Stage = Literal['pre-backup', 'backup', 'post-backup']
 class Command:
-    name: str
-    cmd: str
-    app_name: str
-    to: Optional[str]
-    stage: Literal['pre-backup', 'backup', 'post-backup']
-    result: Optional[Result] = None
-    root: Path
-    duration: Optional[int] = None
 
-    def __init__(self, app_name: str, cmd: str, name: str = None, to: str = None, stage: str = None, root: Path = None) -> None:
+    def __init__(self, app_name: str, cmd: str, name: str | None = None, to: str | None = None, stage: Stage | None = None, root: Path | None = None) -> None:
         self.app_name = app_name
-        self.name = name
-        self.root = root
+        self.name = str(name)
+        self.root = root or Path.cwd()
         self.cmd = cmd
         self.to = to
         self.stage = stage or 'backup'
         if self.stage not in ['pre-backup', 'backup', 'post-backup']:
             print(f'Unknown stage \'{self.stage}\', skipping')
+        self.result: Result | None = None
+        self.duration: float | None = None
 
     def __str__(self) -> str:
         return f'{f"{self.stage}: " if self.stage else ""}{self.cmd}{f" > {self.to}" if self.to else ""}'
@@ -58,9 +51,9 @@ class Command:
         return sanitize_job_name(self.name)
 
     @staticmethod
-    def fromDict(app_name: str, name: str, data: Dict, root: Path):
+    def fromDict(app_name: str, name: str, data: dict, root: Path):
         if 'cmd' not in data:
             raise Exception('key \'cmd\' is missing')
         updated = {'to': None, 'stage': None}
         updated.update(**data)
-        return Command(app_name=app_name, cmd=updated['cmd'], name=name, to=updated['to'], stage=updated['stage'], root=root)
+        return Command(app_name=app_name, cmd=updated['cmd'] or '', name=name, to=updated['to'], stage=updated['stage'], root=root)

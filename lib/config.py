@@ -1,4 +1,3 @@
-# from lib.reporter import Reporter
 from lib.prom_reporter import PromReporter
 import os
 import shutil
@@ -7,19 +6,12 @@ from lib.ijob import IJob
 from lib.rsync_job import RsyncJob
 from lib.result import Result
 from lib.command import Command
-from typing import Dict, List
 from datetime import datetime
 from pathlib import Path
 
 
 class Config(IJob):
-    app: str
-    commands: List[Command]
-    rsync_jobs: List[RsyncJob]
-    start_time: datetime
-    results: List[Result]
-
-    def __init__(self, app: str, data: Dict) -> None:
+    def __init__(self, app: str, data: dict) -> None:
         self.app = app
         self.start_time = datetime.now()
         self.backup_path.mkdir(exist_ok=True, parents=True)
@@ -27,8 +19,9 @@ class Config(IJob):
             self.commands = [Command.fromDict(app, name, cmd, self.backup_path)
                              for name, cmd in data['commands'].items()]
         else:
-            self.commands = []
-        self.rsync_jobs = []
+            self.commands: list[Command] = []
+        self.results: list[Result] = []
+        self.rsync_jobs: list[RsyncJob] = []
         if 'files' in data:
             for file in data['files']:
                 self.rsync_jobs.append(RsyncJob(app, file, self.backup_path, 'file'))
@@ -77,7 +70,7 @@ class Config(IJob):
         return root.joinpath(self.app, f'backup-{self.start}.tar.gz')
 
     @property
-    def get_tar_size_mb(self) -> int:
+    def get_tar_size_mb(self) -> float:
         if not self.backup_tar_path.exists():
             return 0
         return self.backup_tar_path.stat().st_size / (1024 * 1024)
